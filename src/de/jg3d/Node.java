@@ -5,211 +5,216 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Node {
-	private Vector position; // position
-	private Vector projection; // projection (z=0)
 
-	private double weight = 25; // ToDo
-	private double diameter = 10; // todo
+    private Vector position; // position
+    private Vector projection; // projection (z=0)
 
-	private String name;
-	private Color color;
-	private List<Edge> adjacencies;
+    private double weight = 25; // ToDo
+    private double diameter = 10; // todo
 
-	private static int instanceCounter = 0;
+    private String name;
+    private Color color;
+    private List<Edge> adjacencies;
 
-	private Vector velocity;
-	private Vector selfforce;
+    private static int instanceCounter = 0;
 
-	public static double maxAttraction = 100;
-	public static double maxRepulsion = 100;
+    private Vector velocity;
+    private Vector selfforce;
 
-	private boolean fixed;
+    public static double maxAttraction = 100;
+    public static double maxRepulsion = 100;
 
-	public boolean isFixed() {
-		return fixed;
-	}
+    private boolean fixed;
 
-	public void setFixed(boolean fixed) {
-		this.fixed = fixed;
-	}
+    public boolean isFixed() {
+        return fixed;
+    }
 
-	private void init(Vector pos, String name, Color color) {
-		this.position = pos;
-		this.name = name;
-		this.color = color;
-		velocity = new Vector(0, 0, 0);
-		selfforce = new Vector(0, 0, 0);
-		adjacencies = new LinkedList<Edge>();
-	}
+    public void setFixed(boolean fixed) {
+        this.fixed = fixed;
+    }
 
-	public double getWeight() {
-		return weight;
-	}
+    private void init(Vector pos, String name, Color color) {
+        this.position = pos;
+        this.name = name;
+        this.color = color;
+        velocity = new Vector(0, 0, 0);
+        selfforce = new Vector(0, 0, 0);
+        adjacencies = new LinkedList<Edge>();
+    }
 
-	public void setWeight(double w) {
-		this.weight = w;
-	}
+    public double getWeight() {
+        return weight;
+    }
 
-	public double getDiameter() {
-		return diameter;
-	}
+    public void setWeight(double w) {
+        this.weight = w;
+    }
 
-	public double getRadius() {
-		return getDiameter() / 2;
-	}
+    public double getDiameter() {
+        return diameter;
+    }
 
-	public Node() {
-		instanceCounter++;
-		init(new Vector(0, 0, 0), Integer.toString(instanceCounter), Color.red);
-	}
+    public double getRadius() {
+        return getDiameter() / 2;
+    }
 
-	public Node(Vector p) {
-		instanceCounter++;
-		init(p, Integer.toString(instanceCounter), Color.RED);
-	}
+    public Node() {
+        instanceCounter++;
+        init(new Vector(0, 0, 0), Integer.toString(instanceCounter), Color.red);
+    }
 
-	public Node(Vector p, String name) {
-		instanceCounter++;
-		init(p, name, Color.RED);
-	}
+    public Node(Vector p) {
+        instanceCounter++;
+        init(p, Integer.toString(instanceCounter), Color.RED);
+    }
 
-	public void setColor(Color c) {
-		this.color = c;
-	}
+    public Node(Vector p, String name) {
+        instanceCounter++;
+        init(p, name, Color.RED);
+    }
 
-	public Color getColor() {
-		int p = (int) (127 - position.getZ());
-		if (p < 5)
-			p = 5;
-		else if (p > 250)
-			p = 250;
-		Color c = new Color(color.getRed(), color.getGreen(), color.getBlue(), p);
-		return c;
-	}
+    public void setColor(Color c) {
+        this.color = c;
+    }
 
-	public void setName(String n) {
-		this.name = n;
-	}
+    public Color getColor() {
+        int p = (int) (127 - position.getZ());
+        if (p < 5) {
+            p = 5;
+        } else if (p > 250) {
+            p = 250;
+        }
+        Color c = new Color(color.getRed(), color.getGreen(), color.getBlue(), p);
+        return c;
+    }
 
-	public void setPos(Vector p) {
-		this.position = p;
-	}
+    public void setName(String n) {
+        this.name = n;
+    }
 
-	public Vector getPos() {
-		return position;
-	}
+    public void setPos(Vector p) {
+        this.position = p;
+    }
 
-	public List<Edge> getAdjacencies() {
-		return adjacencies;
-	}
+    public Vector getPos() {
+        return position;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public List<Edge> getAdjacencies() {
+        return adjacencies;
+    }
 
-	public boolean connectedTo(Node node) {
-		for (Edge edge : adjacencies)
-			if (edge.getDestination() == node)
-				return true;
-		return false;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Edge getEdgeTo(Node node) {
-		for (Edge edge : adjacencies)
-			if (edge.getDestination() == node)
-				return edge;
-		return null;
-	}
+    public boolean connectedTo(Node node) {
+        for (Edge edge : adjacencies) {
+            if (edge.getDestination() == node) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public void project(double canvasWidth, double canvasHeight) {
-		projection = position.get2D(canvasWidth, canvasHeight);
-	}
+    public Edge getEdgeTo(Node node) {
+        for (Edge edge : adjacencies) {
+            if (edge.getDestination() == node) {
+                return edge;
+            }
+        }
+        return null;
+    }
 
-	@Override
-	public String toString() {
-		return new StringBuilder().append('[').append(name).append(']').toString();
-	}
+    public void project(double canvasWidth, double canvasHeight) {
+        projection = position.get2D(canvasWidth, canvasHeight);
+    }
 
-	public Vector getProjection() {
-		return projection;
-	}
+    @Override
+    public String toString() {
+        return new StringBuilder().append('[').append(name).append(']').toString();
+    }
+
+    public Vector getProjection() {
+        return projection;
+    }
 
 	// repulsive force to node
-	// distance einbauen => wtf?
-	public Vector repulsiveForce(Node node) {
-		Vector force = position.add(node.getPos().invert()); // force = a - b
-		// (abs(a-b) =
-		// distance!!!!)
-		force = force.multiply(1 / Math.pow(force.absoluteValue(), 3)); // normalize
-		force = force.multiply(weight * node.getWeight()); // weighting
+    // distance einbauen => wtf?
+    public Vector repulsiveForce(Node node) {
+        Vector force = position.add(node.getPos().invert()); // force = a - b
+        // (abs(a-b) =
+        // distance!!!!)
+        force = force.multiply(1 / Math.pow(force.absoluteValue(), 3)); // normalize
+        force = force.multiply(weight * node.getWeight()); // weighting
 
-		if (force.absoluteValue() > maxRepulsion) { // reduce extraterrestrial
-			// uberforces
-			System.out.println("repulsive uberforce: " + force.absoluteValue());
-			force = force.multiply(maxRepulsion / force.absoluteValue());
-		}
-		return force;
-	}
+        if (force.absoluteValue() > maxRepulsion) { // reduce extraterrestrial
+            // uberforces
+            System.out.println("repulsive uberforce: " + force.absoluteValue());
+            force = force.multiply(maxRepulsion / force.absoluteValue());
+        }
+        return force;
+    }
 
-	// sum of attractive forces to all adjacencies
-	public Vector attractiveForce() {
-		Vector force = new Vector(0, 0, 0);
-		Vector attraction;
-		for (Edge edge : adjacencies) {
-			attraction = position.add(edge.getDestination().getPos().invert()); // force
-			// =
-			// a
-			// -
-			// b
-			attraction = attraction.multiply(1 / Math.pow(attraction.absoluteValue(), 0.5)); // normalize
-			force = force.add(attraction.multiply(edge.getWeight()));
-		}
+    // sum of attractive forces to all adjacencies
+    public Vector attractiveForce() {
+        Vector force = new Vector(0, 0, 0);
+        Vector attraction;
+        for (Edge edge : adjacencies) {
+            attraction = position.add(edge.getDestination().getPos().invert()); // force
+            // =
+            // a
+            // -
+            // b
+            attraction = attraction.multiply(1 / Math.pow(attraction.absoluteValue(), 0.5)); // normalize
+            force = force.add(attraction.multiply(edge.getWeight()));
+        }
 
 		// if (force.absoluteValue() > maxAttraction) { // reduce
-		// extraterrestrial uberforces
-		// System.out.println("attractive uberforce: "+force.absoluteValue());
-		// force = force.multiply(maxAttraction / force.absoluteValue());
-		// }
+        // extraterrestrial uberforces
+        // System.out.println("attractive uberforce: "+force.absoluteValue());
+        // force = force.multiply(maxAttraction / force.absoluteValue());
+        // }
+        return force.invert();
+    }
 
-		return force.invert();
-	}
+    public void affect(Vector force) {
+        if (!fixed) {
+            velocity = velocity.add(force.multiply(1 / weight)); // inertia
+            Vector friction = velocity.multiply(0.025); // 2.5% friction
+            velocity = velocity.add(friction.invert());
+            velocity = velocity.add(selfforce);
+            position = position.add(velocity);
+        }
+    }
 
-	public void affect(Vector force) {
-		if (!fixed) {
-			velocity = velocity.add(force.multiply(1 / weight)); // inertia
-			Vector friction = velocity.multiply(0.025); // 2.5% friction
-			velocity = velocity.add(friction.invert());
-			velocity = velocity.add(selfforce);
-			position = position.add(velocity);
-		}
-	}
+    public void alterSelfForceX(double d) {
+        selfforce.setX(selfforce.getX() + d);
+    }
 
-	public void alterSelfForceX(double d) {
-		selfforce.setX(selfforce.getX() + d);
-	}
+    public void alterSelfForceY(double d) {
+        selfforce.setY(selfforce.getY() + d);
+    }
 
-	public void alterSelfForceY(double d) {
-		selfforce.setY(selfforce.getY() + d);
-	}
+    public void alterSelfForceZ(double d) {
+        selfforce.setZ(selfforce.getZ() + d);
+    }
 
-	public void alterSelfForceZ(double d) {
-		selfforce.setZ(selfforce.getZ() + d);
-	}
+    public void setSelfForce(Vector v) {
+        selfforce = v;
+    }
 
-	public void setSelfForce(Vector v) {
-		selfforce = v;
-	}
+    public void setSelfForceX(double d) {
+        selfforce.setX(d);
+    }
 
-	public void setSelfForceX(double d) {
-		selfforce.setX(d);
-	}
+    public void setSelfForceY(double d) {
+        selfforce.setY(d);
+    }
 
-	public void setSelfForceY(double d) {
-		selfforce.setY(d);
-	}
-
-	public void setSelfForceZ(double d) {
-		selfforce.setZ(d);
-	}
+    public void setSelfForceZ(double d) {
+        selfforce.setZ(d);
+    }
 
 }
