@@ -10,7 +10,7 @@ public class Node {
     private Vector projection; // projection (z=0)
 
     private double weight = 25; // ToDo
-    private double diameter = 10; // todo
+    private double diameter = 20; // todo
 
     private String name;
     private Color color;

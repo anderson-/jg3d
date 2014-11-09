@@ -48,11 +48,12 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
     private boolean showEdgeLength = false;
-    private int pseudoZoom = 1;
+    private int pseudoZoom = 8;
 
     private ForceWorker forceWorker1;
     private ForceWorker forceWorker2;
 
+    @Override
     public void keyPressed(KeyEvent e) {
         // System.out.println(e);
         switch (e.getKeyCode()) {
@@ -98,14 +99,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             case '-': // pseudo-unzoom
                 pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
                 for (Node n : graph.getNodes()) {
-                    n.setDiameter(5 * pseudoZoom);
+                    n.setDiameter(10 * pseudoZoom / 4);
                 }
                 break;
             case '=':
             case '+': // pseudo-zoom
                 pseudoZoom = (pseudoZoom + 1 <= 30) ? pseudoZoom + 1 : pseudoZoom;
                 for (Node n : graph.getNodes()) {
-                    n.setDiameter(5 * pseudoZoom);
+                    n.setDiameter(10 * pseudoZoom / 4);
                 }
                 break;
             case 'i': // invert all fixings
@@ -205,6 +206,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
+    @Override
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SHIFT && shiftIsDown) {
             shiftIsDown = false;
@@ -216,20 +218,23 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
+    @Override
     public void keyTyped(KeyEvent e) {
 
     }
 
+    @Override
     public void mouseDragged(MouseEvent e) {
         if (!shiftIsDown) {
-            hit.setPos(new Vector(e.getX() - 400, e.getY() - 300, 0));
+            hit.setPos(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0));
         }
     }
 
+    @Override
     public void mouseMoved(MouseEvent e) {
         if (ctrlIsDown) {
             if (hit != null) {
-                Node tmp = new Node(new Vector(e.getX() - 400, e.getY() - 300, 0));
+                Node tmp = new Node(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0));
                 if (hit.getPos().distance(tmp.getPos()) > 20) {
                     graph.addNode(tmp);
                     graph.connect(hit, tmp, 10);
@@ -241,10 +246,11 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
+    @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getClickCount() == 2) {
             if (!shiftIsDown) {
-                graph.addNode(new Node(new Vector(e.getX() - 400, e.getY() - 300, 0)));
+                graph.addNode(new Node(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0)));
             } else {
                 graph.remNode(graph.hit(e.getPoint()));
             }
@@ -256,12 +262,15 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
+    @Override
     public void mouseEntered(MouseEvent e) {
     }
 
+    @Override
     public void mouseExited(MouseEvent e) {
     }
 
+    @Override
     public void mousePressed(MouseEvent e) {
         hit = graph.hit(e.getPoint());
         if (hit != null && !shiftIsDown) {
@@ -269,6 +278,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
+    @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1 && !shiftIsDown) {
             if (hit != null) {
@@ -341,7 +351,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
     public static List<List<Node>> nodeGrid(Graph g, int width, int height, double ew,
             boolean vconnect, boolean hconnect) {
-        List<List<Node>> grid = new LinkedList<List<Node>>();
+        List<List<Node>> grid = new LinkedList<>();
         List<Node> a, b, first;
         grid.add(first = a = nodeLine(g, width, ew));
         for (int i = 1; i < height; i++) {
@@ -366,7 +376,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     }
 
     public static List<Node> nodeLine(Graph g, int cnt, double ew) {
-        List<Node> nl = new LinkedList<Node>();
+        List<Node> nl = new LinkedList<>();
         Node a, b;
         a = new Node(new Vector(100.0));
         nl.add(a);
@@ -473,7 +483,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
         if (showNodes) {
             for (Node node : graph.getNodes()) {
-                if (node.getAdjacencies().size() <= 1) {
+                if (node == hit) {
+                    node.setColor(Color.green);
+                } else if (node.getAdjacencies().size() <= 1) {
                     node.setColor(Color.red);
                 } else if (node.getAdjacencies().size() <= 2) {
                     node.setColor(Color.yellow);
@@ -544,11 +556,10 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     }
 
     public Graphics2D createGraphics2D(int w, int h) {
-        Graphics2D g2 = null;
         if (bimg == null || bimg.getWidth() != w || bimg.getHeight() != h) {
             bimg = (BufferedImage) createImage(w, h);
         }
-        g2 = bimg.createGraphics();
+        Graphics2D g2 = bimg.createGraphics();
         g2.setBackground(getBackground());
         g2.clearRect(0, 0, w, h);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -578,6 +589,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         thread = null;
     }
 
+    @Override
     public void run() {
         Thread me = Thread.currentThread();
         while (thread == me) {
@@ -597,7 +609,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         if (argv.length > 0) { //if we got a file, let's try to load it
             Importer.importfile(demo.graph, argv[0]);
         } else { //or show a simple node-grid
-            nodeGrid(demo.graph, 7, 7, 8, false, false);
+            nodeGrid(demo.graph, 80, 26, 26, false, true);
         }
         Frame f = new Frame("jG3D (press ? for help)");
         f.addWindowListener(new WindowAdapter() {
