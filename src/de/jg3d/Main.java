@@ -50,8 +50,8 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdgeLength = false;
     private int pseudoZoom = 8;
 
-    private ForceWorker forceWorker1;
-    private ForceWorker forceWorker2;
+    private int threads = 1;
+    private ForceWorker[] forceWorkers = new ForceWorker[4];
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -95,6 +95,18 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         switch (e.getKeyChar()) {
             case '?':
                 showHelp = !showHelp;
+                break;
+            case '1':
+                threads = 1;
+                break;
+            case '2':
+                threads = 2;
+                break;
+            case '3':
+                threads = 3;
+                break;
+            case '4':
+                threads = 4;
                 break;
             case '-': // pseudo-unzoom
                 pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
@@ -226,7 +238,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     @Override
     public void mouseDragged(MouseEvent e) {
         if (!shiftIsDown) {
-            hit.setPos(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0));
+            hit.setPos(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0));
         }
     }
 
@@ -234,7 +246,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     public void mouseMoved(MouseEvent e) {
         if (ctrlIsDown) {
             if (hit != null) {
-                Node tmp = new Node(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0));
+                Node tmp = new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0));
                 if (hit.getPos().distance(tmp.getPos()) > 20) {
                     graph.addNode(tmp);
                     graph.connect(hit, tmp, 10);
@@ -250,7 +262,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     public void mouseClicked(MouseEvent e) {
         if (e.getClickCount() == 2) {
             if (!shiftIsDown) {
-                graph.addNode(new Node(new Vector((e.getX() - 400)/pseudoZoom, (e.getY() - 300)/pseudoZoom, 0)));
+                graph.addNode(new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0)));
             } else {
                 graph.remNode(graph.hit(e.getPoint()));
             }
@@ -319,9 +331,6 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         // nodeGrid(graph,13,13,8,true,false);
         // torus:
         //nodeGrid(graph, 12, 18, 14, true, true);
-        //XXX: assuming a dualcore cpu...
-        forceWorker1 = new ForceWorker(graph, 0, 2);
-        forceWorker2 = new ForceWorker(graph, 1, 2);
     }
 
     public static void connectNodesToNearestNeighbours(Graph g, double radius) {
@@ -434,20 +443,26 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             forces[i] = new Vector(0, 0, 0);
         }
 
-        forceWorker1.setForces(forces);
-        forceWorker2.setForces(forces);
-
-        forceWorker1.run();
-        forceWorker2.run();
-
         try {
-            forceWorker1.join();
-            forceWorker2.join();
+            for (int i = 0; i < threads; i++) {
+                forceWorkers[i] = new ForceWorker(graph, i, threads);
+                forceWorkers[i].setForces(forces);
+                forceWorkers[i].start();
+            }
+
+            for (int i = 0; i < threads; i++) {
+                forceWorkers[i].join();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         totalforce = graph.affectForces(forces);
+
+        if (tick.get() > 7 && graph.getKE() < 1500) { //refine calculations
+            threads = 1;
+        }
+
     }
 
     public void drawScene(int w, int h, Graphics2D g2) {
@@ -522,7 +537,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         if (showHud) {
             drawTextBlock(
                     g2,
-                    "FPS : " + tick + "\n"
+                    "FPS : " + tick + ((threads > 1) ? " using " + threads + " threads" : "") + "\n"
                     + "Nodes : " + graph.getNodes().size() + "\n"
                     + "Edges : " + graph.getEdges().size() + "\n"
                     + "Force : " + totalforce + " (" + totalforce.sum() + ")" + "\n"

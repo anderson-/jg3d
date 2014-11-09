@@ -159,7 +159,7 @@ public class Node {
 
         if (force.absoluteValue() > maxRepulsion) { // reduce extraterrestrial
             // uberforces
-            System.out.println("repulsive uberforce: " + force.absoluteValue());
+//            System.out.println("repulsive uberforce: " + force.absoluteValue());
             force = force.multiply(maxRepulsion / force.absoluteValue());
         }
         return force;
