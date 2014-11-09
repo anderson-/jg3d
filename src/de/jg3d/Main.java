@@ -95,16 +95,16 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case '-': // pseudo-unzoom
                 pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
-//                for (Node n : graph.getNodes()) {
-//                    n.getPos().setZ(n.getPos().getZ() + 10);
-//                }
+                for (Node n : graph.getNodes()) {
+                    n.setDiameter(5 * pseudoZoom);
+                }
                 break;
             case '=':
             case '+': // pseudo-zoom
                 pseudoZoom = (pseudoZoom + 1 <= 30) ? pseudoZoom + 1 : pseudoZoom;
-//                for (Node n : graph.getNodes()) {
-//                    n.getPos().setZ(n.getPos().getZ() - 10);
-//                }
+                for (Node n : graph.getNodes()) {
+                    n.setDiameter(5 * pseudoZoom);
+                }
                 break;
             case 'i': // invert all fixings
                 for (Node n : graph.getNodes()) {

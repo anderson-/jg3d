@@ -54,6 +54,10 @@ public class Node {
     public double getDiameter() {
         return diameter;
     }
+    
+    public void setDiameter(double diameter) {
+        this.diameter = diameter;
+    }
 
     public double getRadius() {
         return getDiameter() / 2;
