@@ -64,6 +64,19 @@ public class Graph {
         return ke;
     }
 
+    public double getPE() {
+        double pe = 0;
+        for (Node n1 : nodes) {
+            pe += n1.attractiveForce().absoluteValue();
+            for (Node n2 : nodes) {
+                if (n1 != n2) {
+                    pe += n1.repulsiveForce(n2).absoluteValue() / n1.getPos().distance(n2.getPos());
+                }
+            }
+        }
+        return pe;
+    }
+
     public boolean connectTo(Node a, Node b, double weight) {
         if (a.connectedTo(b)) {
             Edge e = a.getEdgeTo(b);

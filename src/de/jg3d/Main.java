@@ -44,6 +44,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdges = true;
     private boolean showEdgeNames = false;
     private boolean showHud = true;
+    private boolean showEnergyStatistics = false;
     private boolean showHelp = false;
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
@@ -148,6 +149,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case 'h':
                 showHud = !showHud;
+                break;
+            case 'E':
+                showEnergyStatistics = !showEnergyStatistics;
                 break;
             case 'n':
                 showNodes = !showNodes;
@@ -540,8 +544,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     "FPS : " + tick + ((threads > 1) ? " using " + threads + " threads" : "") + "\n"
                     + "Nodes : " + graph.getNodes().size() + "\n"
                     + "Edges : " + graph.getEdges().size() + "\n"
-                    + "Force : " + totalforce + " (" + totalforce.sum() + ")" + "\n"
-                    + "Kinetic Energy : " + (int) graph.getKE() + "\n", 10, 10, Color.LIGHT_GRAY);
+                    + "Force : " + totalforce + " (" + totalforce.sum() + ")" + "\n", 10, 10, Color.LIGHT_GRAY);
+        }
+        if (showEnergyStatistics) {
+            drawTextBlock(
+                    g2,
+                    "Kinetic Energy : " + (int) graph.getKE() + "\n"
+                    + "Potential Energy : " + (int) graph.getPE() + "\n"
+                    + "System Energy : " + (int) (graph.getPE() + graph.getKE()) + "\n", 10, 70, Color.LIGHT_GRAY);
         }
         if (showHelp) {
             drawTextBlock(g2, "Help:\n" + "Left mouse and drag:\n"
@@ -624,7 +634,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         if (argv.length > 0) { //if we got a file, let's try to load it
             Importer.importfile(demo.graph, argv[0]);
         } else { //or show a simple node-grid
-            nodeGrid(demo.graph, 80, 26, 26, false, true);
+            nodeGrid(demo.graph, 2, 1, 1, false, true);
         }
         Frame f = new Frame("jG3D (press ? for help)");
         f.addWindowListener(new WindowAdapter() {
