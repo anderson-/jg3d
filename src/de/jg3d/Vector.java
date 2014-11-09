@@ -113,16 +113,16 @@ public class Vector {
         return new Vector((x + p.getX()) / 2, (y + p.getY()) / 2, (z + p.getZ()) / 2);
     }
 
-    public Vector get2D(double canvasWidth, double canvasHeight) {
-        return new Vector(get2Dx(canvasWidth), get2Dy(canvasHeight), 0);
+    public Vector get2D(double canvasWidth, double canvasHeight, int pseudoZoom) {
+        return new Vector(get2Dx(canvasWidth, pseudoZoom), get2Dy(canvasHeight, pseudoZoom), 0);
     }
 
-    public double get2Dx(double canvaswidth) {
-        return canvaswidth * (x / (z + canvaswidth)) + canvaswidth / 2;
+    public double get2Dx(double canvaswidth, int pseudoZoom) {
+        return canvaswidth * (x * pseudoZoom / (z + canvaswidth)) + canvaswidth / 2;
     }
 
-    public double get2Dy(double canvasheight) {
-        return canvasheight * (y / (z + canvasheight)) + canvasheight / 2;
+    public double get2Dy(double canvasheight, int pseudoZoom) {
+        return canvasheight * (y * pseudoZoom / (z + canvasheight)) + canvasheight / 2;
     }
 
     public void rotateX(double beta) {

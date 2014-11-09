@@ -59,6 +59,10 @@ public class Node {
         return getDiameter() / 2;
     }
 
+    public double getKE() {
+        return velocity.absoluteValue() * weight;
+    }
+
     public Node() {
         instanceCounter++;
         init(new Vector(0, 0, 0), Integer.toString(instanceCounter), Color.red);
@@ -127,8 +131,8 @@ public class Node {
         return null;
     }
 
-    public void project(double canvasWidth, double canvasHeight) {
-        projection = position.get2D(canvasWidth, canvasHeight);
+    public void project(double canvasWidth, double canvasHeight, int pseudoZoom) {
+        projection = position.get2D(canvasWidth, canvasHeight, pseudoZoom);
     }
 
     @Override
@@ -140,7 +144,7 @@ public class Node {
         return projection;
     }
 
-	// repulsive force to node
+    // repulsive force to node
     // distance einbauen => wtf?
     public Vector repulsiveForce(Node node) {
         Vector force = position.add(node.getPos().invert()); // force = a - b
@@ -171,7 +175,7 @@ public class Node {
             force = force.add(attraction.multiply(edge.getWeight()));
         }
 
-		// if (force.absoluteValue() > maxAttraction) { // reduce
+        // if (force.absoluteValue() > maxAttraction) { // reduce
         // extraterrestrial uberforces
         // System.out.println("attractive uberforce: "+force.absoluteValue());
         // force = force.multiply(maxAttraction / force.absoluteValue());

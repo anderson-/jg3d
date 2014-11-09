@@ -56,6 +56,14 @@ public class Graph {
         return null;
     }
 
+    public double getKE() {
+        double ke = 0;
+        for (Node node : nodes) {
+            ke += node.getKE();
+        }
+        return ke;
+    }
+
     public boolean connectTo(Node a, Node b, double weight) {
         if (a.connectedTo(b)) {
             Edge e = a.getEdgeTo(b);

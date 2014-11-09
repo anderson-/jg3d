@@ -46,6 +46,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showHelp = false;
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
+    private int pseudoZoom = 1;
 
     private ForceWorker forceWorker1;
     private ForceWorker forceWorker2;
@@ -92,16 +93,18 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             case '?':
                 showHelp = !showHelp;
                 break;
-
             case '-': // pseudo-unzoom
-                for (Node n : graph.getNodes()) {
-                    n.getPos().setZ(n.getPos().getZ() + 10);
-                }
+                pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
+//                for (Node n : graph.getNodes()) {
+//                    n.getPos().setZ(n.getPos().getZ() + 10);
+//                }
                 break;
+            case '=':
             case '+': // pseudo-zoom
-                for (Node n : graph.getNodes()) {
-                    n.getPos().setZ(n.getPos().getZ() - 10);
-                }
+                pseudoZoom = (pseudoZoom + 1 <= 30) ? pseudoZoom + 1 : pseudoZoom;
+//                for (Node n : graph.getNodes()) {
+//                    n.getPos().setZ(n.getPos().getZ() - 10);
+//                }
                 break;
             case 'i': // invert all fixings
                 for (Node n : graph.getNodes()) {
@@ -290,7 +293,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
         graph = new Graph();
 
-		//examples:
+        //examples:
         // grid:
         // nodeGrid(graph,4,4,8,false,false);
         // nodeGrid(graph,7,7,8,false,false);
@@ -401,7 +404,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
     public void project() {
         for (Node node : graph.getNodes()) {
-            node.project(800, 600);
+            node.project(800, 600, pseudoZoom);
         }
     }
 
@@ -486,10 +489,13 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
 
         if (showHud) {
-            drawTextBlock(g2, "FPS : " + tick + "\n" + "Nodes : " + graph.getNodes().size() + "\n"
-                    + "Edges : " + graph.getEdges().size() + "\n" + "Force : " + totalforce + " ("
-                    + totalforce.sum() + ")", 10, 10, Color.LIGHT_GRAY);
-
+            drawTextBlock(
+                    g2,
+                    "FPS : " + tick + "\n"
+                    + "Nodes : " + graph.getNodes().size() + "\n"
+                    + "Edges : " + graph.getEdges().size() + "\n"
+                    + "Force : " + totalforce + " (" + totalforce.sum() + ")" + "\n"
+                    + "Kinetic Energy : " + (int) graph.getKE() + "\n", 10, 10, Color.LIGHT_GRAY);
         }
         if (showHelp) {
             drawTextBlock(g2, "Help:\n" + "Left mouse and drag:\n"
