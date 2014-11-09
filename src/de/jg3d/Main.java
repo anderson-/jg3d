@@ -40,12 +40,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
     private boolean showNodes = true;
     private boolean showNodeNames = false;
+    private boolean showNodePosition = false;
     private boolean showEdges = true;
     private boolean showEdgeNames = false;
     private boolean showHud = true;
     private boolean showHelp = false;
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
+    private boolean showEdgeLength = false;
     private int pseudoZoom = 1;
 
     private ForceWorker forceWorker1;
@@ -140,6 +142,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             case 'l':
                 showNodeNames = !showNodeNames;
                 break;
+            case 'P':
+                showNodePosition = !showNodePosition;
+                break;
             case 'm':
                 showNodeWeights = !showNodeWeights;
                 break;
@@ -151,6 +156,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case 'd':
                 showEdgeWeights = !showEdgeWeights;
+                break;
+            case 'L':
+                showEdgeLength = !showEdgeLength;
                 break;
             case 'q':
                 for (Node n : graph.getNodes()) {
@@ -446,6 +454,13 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                                 .getX()) / 2, (int) (edge.getSource().getProjection().getY() + edge
                                 .getDestination().getProjection().getY()) / 2);
                     }
+                    if (showEdgeLength) {
+                        g2.drawString("" + (int) edge.getSource().getPos().distance(edge.getDestination().getPos()), (int) (edge.getSource()
+                                .getProjection().getX() + edge.getDestination().getProjection()
+                                .getX()) / 2, (int) (edge.getSource().getProjection().getY() + edge
+                                .getDestination().getProjection().getY()) / 2);
+                    }
+
                     if (showEdgeNames && edge.getLabel() != null) {
                         g2.drawString("" + edge.getLabel(), (int) (edge.getSource().getProjection()
                                 .getX() + edge.getDestination().getProjection().getX()) / 2,
@@ -485,6 +500,10 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     g2.drawString("" + node.getName(), (int) node.getProjection().getX(),
                             (int) node.getProjection().getY());
                 }
+                if (showNodePosition) {
+                    g2.drawString("" + node.getPos(), (int) node.getProjection().getX(),
+                            (int) node.getProjection().getY());
+                }
             }
         }
 
@@ -506,11 +525,12 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     + "Shift and drag/drop one node on another:\n" + "  disconnect them\n"
                     + "Ctrl and mouse-move\n" + "  create a line of nodes\n\n"
                     + "X-Rotation: q / w\n" + "Y-Rotation: a / s\n" + "Z-Rotation: y / x\n"
-                    + "Pseudozoom: + / -\n" + "Toggle nodes: n\n" + "Toggle nodeNames: l\n"
-                    + "Toggle node weights: m\n" + "Toggle edges: e\n" + "Toggle edgeNames: b\n"
+                    + "Pseudozoom: + / -\n" + "Toggle nodes: n\n" + "Toggle node names: l\n"
+                    + "Toggle node weights: m\n" + "Toggle node positions: P\n"
+                    + "Toggle edges: e\n" + "Toggle edges length: L\n" + "Toggle edge names: b\n"
                     + "Toggle edge weights: d\n" + "Toggle hud: h\n" + "Toogle help: ?\n"
                     + "Fix all nodes: f\n" + "Unfix all nodes: u\n" + "Invert node fixations: i\n"
-                    + "Decrease edge weights: r\n" + "Enhance edge weights: t\n", 10, 80,
+                    + "Decrease edge weights: r\n" + "Enhance edge weights: t\n", 10, 100,
                     new Color(255, 0, 0, 127));
         }
     }
