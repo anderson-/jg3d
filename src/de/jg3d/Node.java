@@ -9,7 +9,7 @@ public class Node {
     private Vector position; // position
     private Vector projection; // projection (z=0)
 
-    private double weight = 25; // ToDo
+    private double weight = 80; // ToDo
     private double diameter = 20; // todo
 
     private String name;
@@ -135,7 +135,7 @@ public class Node {
         return null;
     }
 
-    public void project(double canvasWidth, double canvasHeight, int pseudoZoom) {
+    public void project(double canvasWidth, double canvasHeight, double pseudoZoom) {
         projection = position.get2D(canvasWidth, canvasHeight, pseudoZoom);
     }
 

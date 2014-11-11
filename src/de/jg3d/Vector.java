@@ -113,15 +113,15 @@ public class Vector {
         return new Vector((x + p.getX()) / 2, (y + p.getY()) / 2, (z + p.getZ()) / 2);
     }
 
-    public Vector get2D(double canvasWidth, double canvasHeight, int pseudoZoom) {
+    public Vector get2D(double canvasWidth, double canvasHeight, double pseudoZoom) {
         return new Vector(get2Dx(canvasWidth, pseudoZoom), get2Dy(canvasHeight, pseudoZoom), 0);
     }
 
-    public double get2Dx(double canvaswidth, int pseudoZoom) {
+    public double get2Dx(double canvaswidth, double pseudoZoom) {
         return canvaswidth * (x * pseudoZoom / (z + canvaswidth)) + canvaswidth / 2;
     }
 
-    public double get2Dy(double canvasheight, int pseudoZoom) {
+    public double get2Dy(double canvasheight, double pseudoZoom) {
         return canvasheight * (y * pseudoZoom / (z + canvasheight)) + canvasheight / 2;
     }
 

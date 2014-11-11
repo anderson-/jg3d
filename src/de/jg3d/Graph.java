@@ -185,4 +185,9 @@ public class Graph {
         return totalforce;
     }
 
+    public void clear() {
+        nodes.clear();
+        edges.clear();
+    }
+
 }

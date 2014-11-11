@@ -21,8 +21,10 @@ import javax.swing.event.MouseInputListener;
 
 import de.jg3d.util.Importer;
 import de.jg3d.util.TpsCounter;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
-public class Main extends JApplet implements Runnable, MouseInputListener, KeyListener {
+public class Main extends JApplet implements Runnable, MouseInputListener, KeyListener, MouseWheelListener {
 
     Node hit = null;
     boolean shiftIsDown = false;
@@ -49,10 +51,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
     private boolean showEdgeLength = false;
-    private int pseudoZoom = 8;
+    private double pseudoZoom = 6;
 
     private int threads = 1;
     private ForceWorker[] forceWorkers = new ForceWorker[4];
+
+    public Graph getGraph() {
+        return graph;
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -69,22 +75,22 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 }
                 break;
             case KeyEvent.VK_UP:
-                graph.getNode(0).alterSelfForceY(-2);
+                graph.getNode(0).alterSelfForceY(-.2);
                 break;
             case KeyEvent.VK_DOWN:
-                graph.getNode(0).alterSelfForceY(2);
+                graph.getNode(0).alterSelfForceY(.2);
                 break;
             case KeyEvent.VK_RIGHT:
-                graph.getNode(0).alterSelfForceX(2);
+                graph.getNode(0).alterSelfForceX(.2);
                 break;
             case KeyEvent.VK_LEFT:
-                graph.getNode(0).alterSelfForceX(-2);
+                graph.getNode(0).alterSelfForceX(-.2);
                 break;
             case KeyEvent.VK_PAGE_UP:
-                graph.getNode(0).alterSelfForceZ(2);
+                graph.getNode(0).alterSelfForceZ(.2);
                 break;
             case KeyEvent.VK_PAGE_DOWN:
-                graph.getNode(0).alterSelfForceZ(-2);
+                graph.getNode(0).alterSelfForceZ(-.2);
                 break;
             case KeyEvent.VK_HOME:
                 graph.getNode(0).setPos(new Vector(0, 0, 0));
@@ -112,14 +118,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             case '-': // pseudo-unzoom
                 pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
                 for (Node n : graph.getNodes()) {
-                    n.setDiameter(10 * pseudoZoom / 4);
+                    n.setDiameter(8 * pseudoZoom / 2);
                 }
                 break;
             case '=':
             case '+': // pseudo-zoom
                 pseudoZoom = (pseudoZoom + 1 <= 30) ? pseudoZoom + 1 : pseudoZoom;
                 for (Node n : graph.getNodes()) {
-                    n.setDiameter(10 * pseudoZoom / 4);
+                    n.setDiameter(8 * pseudoZoom / 2);
                 }
                 break;
             case 'i': // invert all fixings
@@ -320,6 +326,15 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     }
 
     @Override
+    public void mouseWheelMoved(MouseWheelEvent we) {
+        double wr = we.getWheelRotation() * .5;
+        pseudoZoom = (pseudoZoom + wr > 0.2) ? pseudoZoom + wr : pseudoZoom;
+        for (Node n : graph.getNodes()) {
+            n.setDiameter(8 * pseudoZoom / 2);
+        }
+    }
+
+    @Override
     public void init() {
         setBackground(Color.black);
         setFocusable(true); // VERY IMPORTANT for making the keylistener work on linux!!!!
@@ -431,6 +446,10 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             node.getPos().rotateY(0.01);
             node.getPos().rotateZ(0.02);
         }
+    }
+
+    public void clear() {
+        graph.clear();
     }
 
     public void project() {
@@ -551,7 +570,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     g2,
                     "Kinetic Energy : " + (int) graph.getKE() + "\n"
                     + "Potential Energy : " + (int) graph.getPE() + "\n"
-                    + "System Energy : " + (int) (graph.getPE() + graph.getKE()) + "\n", 10, 70, Color.LIGHT_GRAY);
+                    + "Total Energy : " + (int) (graph.getPE() + graph.getKE()) + "\n", 10, 70, Color.LIGHT_GRAY);
         }
         if (showHelp) {
             drawTextBlock(g2, "Help:\n" + "Left mouse and drag:\n"
@@ -567,7 +586,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     + "Toggle edges: e\n" + "Toggle edges length: L\n" + "Toggle edge names: b\n"
                     + "Toggle edge weights: d\n" + "Toggle hud: h\n" + "Toogle help: ?\n"
                     + "Fix all nodes: f\n" + "Unfix all nodes: u\n" + "Invert node fixations: i\n"
-                    + "Decrease edge weights: r\n" + "Enhance edge weights: t\n", 10, 100,
+                    + "Decrease edge weights: r\n" + "Enhance edge weights: t\n"
+                    + "Toggle system energy statatistcs: E\n"
+                    + "", 10, 100,
                     new Color(255, 0, 0, 127));
         }
     }
@@ -628,13 +649,26 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         thread = null;
     }
 
+    public static Main createFrame() {
+        final Main demo = new Main();
+        demo.init();
+        //Importer.importfile(demo.graph, argv[0]);
+        //nodeGrid(demo.graph, 15, 14, 13, true, true);
+        demo.addMouseListener(demo);
+        demo.addMouseMotionListener(demo);
+        demo.addKeyListener(demo);
+        demo.addMouseWheelListener(demo);
+        demo.start();
+        return demo;
+    }
+
     public static void main(String argv[]) {
         final Main demo = new Main();
         demo.init();
         if (argv.length > 0) { //if we got a file, let's try to load it
             Importer.importfile(demo.graph, argv[0]);
         } else { //or show a simple node-grid
-            nodeGrid(demo.graph, 2, 1, 1, false, true);
+            nodeGrid(demo.graph, 15, 14, 13, true, true);
         }
         Frame f = new Frame("jG3D (press ? for help)");
         f.addWindowListener(new WindowAdapter() {
@@ -657,6 +691,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         demo.addMouseListener(demo);
         demo.addMouseMotionListener(demo);
         demo.addKeyListener(demo);
+        demo.addMouseWheelListener(demo);
         f.add(demo);
         f.pack();
         f.setSize(new Dimension(800, 600));

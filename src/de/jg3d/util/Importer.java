@@ -8,6 +8,10 @@ import de.jg3d.Edge;
 import de.jg3d.Graph;
 import de.jg3d.Node;
 import de.jg3d.Vector;
+import java.io.FileNotFoundException;
+import java.io.StringReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Importer {
     /*
@@ -18,9 +22,8 @@ public class Importer {
      *   nodenameC;nodenameD
      **/
 
-    public static void importfile(Graph g, String filename) {
+    public static void importContent(Graph g, BufferedReader in) {
         try {
-            BufferedReader in = new BufferedReader(new FileReader(filename));
             String str;
             while ((str = in.readLine()) != null) {
                 String[] tmp = str.split(";");
@@ -44,6 +47,18 @@ public class Importer {
             }
             in.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void importContent(Graph g, String content) {
+        importContent(g, new BufferedReader(new StringReader(content)));
+    }
+    
+    public static void importfile(Graph g, String filename) {
+        try {
+            importContent(g, new BufferedReader(new FileReader(filename)));
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
