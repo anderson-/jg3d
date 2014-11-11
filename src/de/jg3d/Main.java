@@ -51,6 +51,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdgeWeights = false;
     private boolean showNodeWeights = false;
     private boolean showEdgeLength = false;
+    private boolean flatMode = false;
     private double pseudoZoom = 6;
 
     private int threads = 1;
@@ -182,6 +183,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case 'L':
                 showEdgeLength = !showEdgeLength;
+                break;
+            case 'F':
+                flatMode = !flatMode;
                 break;
             case 'q':
                 for (Node n : graph.getNodes()) {
@@ -480,6 +484,11 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             e.printStackTrace();
         }
 
+        if (flatMode) {
+            for (Node node : graph.getNodes()) {
+                node.getPos().setZ(0);
+            }
+        }
         totalforce = graph.affectForces(forces);
 
         if (tick.get() > 7 && graph.getKE() < 1500) { //refine calculations
@@ -588,6 +597,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     + "Fix all nodes: f\n" + "Unfix all nodes: u\n" + "Invert node fixations: i\n"
                     + "Decrease edge weights: r\n" + "Enhance edge weights: t\n"
                     + "Toggle system energy statatistcs: E\n"
+                    + "Toggle flat mode: E\n"
                     + "", 10, 100,
                     new Color(255, 0, 0, 127));
         }
