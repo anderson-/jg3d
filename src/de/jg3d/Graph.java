@@ -77,25 +77,24 @@ public class Graph {
         return pe;
     }
 
-    public boolean connectTo(Node a, Node b, double weight) {
+    public Edge connectTo(Node a, Node b, double weight) {
         if (a.connectedTo(b)) {
             Edge e = a.getEdgeTo(b);
             System.out.println("ERROR : " + a + " already connected to " + b + " with weight "
                     + e.getWeight());
-            return false;
+            return e;
         } else {
             Edge e = null;
             a.getAdjacencies().add(e = new Edge(a, b, weight));
             edges.add(e);
-            return true;
+            return e;
         }
     }
 
-    public boolean connect(Node a, Node b, double weight) {
-        boolean ret = true;
-        ret &= connectTo(a, b, weight);
-        ret &= connectTo(b, a, weight);
-        return ret;
+    public Edge[] connect(Node a, Node b, double weight) {
+        Edge ea = connectTo(a, b, weight);
+        Edge eb = connectTo(b, a, weight);
+        return new Edge[]{ea, eb};
     }
 
     public boolean disconnectFrom(Node a, Node b) {
@@ -166,11 +165,35 @@ public class Graph {
         Node closestNode = null;
         double closestDistance = Double.MAX_VALUE;
         double distance;
-        for (int i = 0; i < nodes.size(); i++) {
-            distance = nodes.get(i).getProjection().distance(v);
+        for (Node node : nodes) {
+            if (node.getType() != 0) {
+                continue;
+            }
+            distance = node.getProjection().distance(v);
             if (distance < closestDistance) {
                 closestDistance = distance;
-                closestNode = nodes.get(i);
+                closestNode = node;
+            }
+        }
+        return closestNode;
+    }
+
+    public Node hit(Point p, double maxDistance, Node... ignore) {
+        Vector v = new Vector(p.getX(), p.getY(), 0);
+        Node closestNode = null;
+        double closestDistance = Double.MAX_VALUE;
+        double distance;
+        hit:
+        for (Node a : nodes) {
+            for (Node i : ignore) {
+                if (a == i) {
+                    continue hit;
+                }
+            }
+            distance = a.getProjection().distance(v);
+            if (distance < closestDistance && distance < maxDistance) {
+                closestDistance = distance;
+                closestNode = a;
             }
         }
         return closestNode;

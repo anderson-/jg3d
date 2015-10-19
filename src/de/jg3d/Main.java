@@ -21,8 +21,10 @@ import javax.swing.event.MouseInputListener;
 
 import de.jg3d.util.Importer;
 import de.jg3d.util.TpsCounter;
+import java.awt.BasicStroke;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 
 public class Main extends JApplet implements Runnable, MouseInputListener, KeyListener, MouseWheelListener {
 
@@ -37,6 +39,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     public Graph graph;
 
     private TpsCounter tick;
+    int gGridSize = 10;
 
     private Vector totalforce = new Vector();
 
@@ -54,8 +57,13 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean flatMode = false;
     private double pseudoZoom = 6;
 
+    int gx, gy;
+
+    ArrayList<Integer> test = new ArrayList<>();
+
     private int threads = 1;
     private ForceWorker[] forceWorkers = new ForceWorker[4];
+    private Node WWW;
 
     public Graph getGraph() {
         return graph;
@@ -76,22 +84,45 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 }
                 break;
             case KeyEvent.VK_UP:
-                graph.getNode(0).alterSelfForceY(-.2);
+                gy -= 10;
+                for (Node n : graph.getNodes()) {
+//                    n.getPos().setY(n.getPos().getY() + -10);
+//                    n.setSelfForceY(-.2);
+                }
                 break;
             case KeyEvent.VK_DOWN:
-                graph.getNode(0).alterSelfForceY(.2);
+                gy += 10;
+                for (Node n : graph.getNodes()) {
+//                    n.getPos().setY(n.getPos().getY() + 10);
+//                    n.setSelfForceY(.2);
+                }
                 break;
             case KeyEvent.VK_RIGHT:
-                graph.getNode(0).alterSelfForceX(.2);
+                gx += 10;
+                for (Node n : graph.getNodes()) {
+
+//                    n.getPos().setX(n.getPos().getX() + 10);
+//                    n.setSelfForceX(.2);
+                }
                 break;
             case KeyEvent.VK_LEFT:
-                graph.getNode(0).alterSelfForceX(-.2);
+                gx -= 10;
+                for (Node n : graph.getNodes()) {
+//                    n.getPos().setX(n.getPos().getX() + -10);
+//                    n.setSelfForceX(-.2);
+                }
                 break;
             case KeyEvent.VK_PAGE_UP:
-                graph.getNode(0).alterSelfForceZ(.2);
+                for (Node n : graph.getNodes()) {
+                    n.getPos().setZ(n.getPos().getZ() + 10);
+//                    n.setSelfForceZ(.2);
+                }
                 break;
             case KeyEvent.VK_PAGE_DOWN:
-                graph.getNode(0).alterSelfForceZ(-.2);
+                for (Node n : graph.getNodes()) {
+                    n.getPos().setZ(n.getPos().getZ() + -10);
+//                    n.setSelfForceZ(-.2);
+                }
                 break;
             case KeyEvent.VK_HOME:
                 graph.getNode(0).setPos(new Vector(0, 0, 0));
@@ -115,6 +146,33 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case '4':
                 threads = 4;
+                break;
+            case '7':
+                generateGuide(new GuideGenerator() {
+                    @Override
+                    public boolean contains(int x, int y, int z) {
+                        return x == 0;
+                    }
+                }, 5, gGridSize);
+                break;
+            case '8':
+                generateGuide(new GuideGenerator() {
+                    @Override
+                    public boolean contains(int x, int y, int z) {
+                        return y == 0;
+                    }
+                }, 5, gGridSize);
+                break;
+            case '9':
+                generateGuide(new GuideGenerator() {
+                    @Override
+                    public boolean contains(int x, int y, int z) {
+                        return z == 0;
+                    }
+                }, 5, gGridSize);
+                break;
+            case '0':
+                createAxis(graph, 30);
                 break;
             case '-': // pseudo-unzoom
                 pseudoZoom = (pseudoZoom - 1 >= 1) ? pseudoZoom - 1 : pseudoZoom;
@@ -189,51 +247,105 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case 'q':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateX(0.05);
-                    }
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateX(0.05);
+//                    }
                 }
+                test.add(1);
                 break;
             case 'w':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateX(-0.05);
-                    }
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateX(-0.05);
+//                    }
                 }
+                test.add(2);
                 break;
             case 'a':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateY(0.05);
-                    }
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateY(0.05);
+//                    }
                 }
+                test.add(3);
                 break;
             case 's':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateY(-0.05);
-                    }
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateY(-0.05);
+//                    }
                 }
+                test.add(4);
                 break;
             case 'y':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateZ(0.05);
-                    }
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateZ(0.05);
+//                    }
                 }
+                test.add(5);
                 break;
             case 'x':
                 for (Node n : graph.getNodes()) {
-                    if (!n.isFixed()) {
-                        n.getPos().rotateZ(-0.05);
+//                    if (!n.isFixed()) {
+                    n.getPos().rotateZ(-0.05);
+//                    }
+                }
+                test.add(6);
+                break;
+            case '#':
+                for (int i = test.size() - 1; i >= 0; i--) {
+                    switch (test.get(i)) {
+                        case 1:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateX(-0.05);
+                            }
+                            break;
+                        case 2:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateX(0.05);
+                            }
+                            break;
+                        case 3:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateY(-0.05);
+                            }
+                            break;
+                        case 4:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateY(0.05);
+                            }
+                            break;
+                        case 5:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateZ(-0.05);
+                            }
+                            break;
+                        case 6:
+                            for (Node n : graph.getNodes()) {
+                                n.getPos().rotateZ(0.05);
+                            }
+                            break;
                     }
                 }
+                test.clear();
+                break;
+            case '\\':
+                if (WWW == null) {
+                    WWW = graph.getNode(23);
+                }
+                runAlgo(graph, WWW);
                 break;
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+        for (Node n : graph.getNodes()) {
+            n.setSelfForceX(0);
+            n.setSelfForceY(0);
+            n.setSelfForceZ(0);
+        }
         if (e.getKeyCode() == KeyEvent.VK_SHIFT && shiftIsDown) {
             shiftIsDown = false;
             System.out.println("shift released");
@@ -261,7 +373,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         if (ctrlIsDown) {
             if (hit != null) {
                 Node tmp = new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0));
-                if (hit.getPos().distance(tmp.getPos()) > 20) {
+                if (hit.getPos().distance(tmp.getPos()) > 20) {//gridSize??
                     graph.addNode(tmp);
                     graph.connect(hit, tmp, 10);
                     hit = tmp;
@@ -275,10 +387,10 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getClickCount() == 2) {
-            if (!shiftIsDown) {
-                graph.addNode(new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0)));
-            } else {
+            if (shiftIsDown) {
                 graph.remNode(graph.hit(e.getPoint()));
+            } else {
+                graph.addNode(new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0)));
             }
         }
         if (e.getClickCount() == 3) {
@@ -307,7 +419,18 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1 && !shiftIsDown) {
-            if (hit != null) {
+            {
+                Node tmp = hit;
+                hit = graph.hit(e.getPoint(), 30, tmp);
+                if (tmp != null && hit != null && tmp != hit && hit.getType() == 2) {
+                    tmp.getPos().setPos(hit.getPos().getX(), hit.getPos().getY(), hit.getPos().getZ());
+                    tmp.setFixed(true);
+                }
+                if (tmp != null && hit != null && hit.getType() != 2) {
+                    tmp.setFixed(false);
+                }
+            }
+            if (hit != null && hit.getType() != 2) {
                 hit.setFixed(false);
             }
             hit = null;
@@ -427,6 +550,9 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         if (depth == 0) {
             return;
         }
+        if (!graph.getNodes().contains(node)) {
+            graph.addNode(node);
+        }
         Node root = new Node(new Vector(500));
         Node leaf1 = new Node(new Vector(500));
         Node leaf2 = new Node(new Vector(500));
@@ -497,14 +623,135 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
     }
 
+    public static void createAxis(Graph graph, int size) {
+        for (Node n : new ArrayList<Node>(graph.getNodes())) {
+            if (n.getType() == 3) {
+                graph.remNode(n);
+            }
+        }
+        Node O = new Node(new Vector(0, 0, 0));
+        O.setType(3);
+        O.setDiameter(5);
+        O.setFixed(true);
+        O.setWeight(0);
+        O.setColor(Color.gray);
+        graph.addNode(O);
+
+        Edge c[];
+
+        java.awt.Stroke s = new BasicStroke(4);
+
+        Node X = new Node(new Vector(size, 0, 0));
+        X.setType(3);
+        X.setDiameter(5);
+        X.setFixed(true);
+        X.setWeight(0);
+        X.setColor(Color.red);
+        graph.addNode(X);
+        c = graph.connect(O, X, 0);
+        c[0].setColor(Color.red);
+        c[1].setColor(Color.red);
+        c[0].setStroke(s);
+        c[1].setStroke(s);
+
+        Node Y = new Node(new Vector(0, size, 0));
+        Y.setType(3);
+        Y.setDiameter(5);
+        Y.setFixed(true);
+        Y.setWeight(0);
+        Y.setColor(Color.green);
+        graph.addNode(Y);
+        c = graph.connect(O, Y, 0);
+        c[0].setColor(Color.green);
+        c[1].setColor(Color.green);
+        c[0].setStroke(s);
+        c[1].setStroke(s);
+
+        Node Z = new Node(new Vector(0, 0, size));
+        Z.setType(3);
+        Z.setDiameter(5);
+        Z.setFixed(true);
+        Z.setWeight(0);
+        Z.setColor(Color.blue);
+        graph.addNode(Z);
+        c = graph.connect(O, Z, 0);
+        c[0].setColor(Color.blue);
+        c[1].setColor(Color.blue);
+        c[0].setStroke(s);
+        c[1].setStroke(s);
+    }
+
+    public void generateGuide(GuideGenerator guideGen, int size, int d) {
+        /*synchronized (graph)*/ {
+            for (Node n : new ArrayList<Node>(graph.getNodes())) {
+                if (n.getType() == 2) {
+                    graph.remNode(n);
+                }
+            }
+            for (int x = -size; x <= size; x++) {
+                for (int y = -size; y <= size; y++) {
+                    for (int z = -size; z <= size; z++) {
+                        if (guideGen.contains(x, y, z)) {
+                            Node node = new Node(new Vector(x * d, y * d, z * d));
+                            node.setType(2);
+                            node.setColor(Color.red);
+                            graph.addNode(node);
+                            node.setDiameter(5);
+                            node.setFixed(true);
+                            node.setWeight(0);
+                        }
+                    }
+                }
+            }
+            for (Node n : new ArrayList<Node>(graph.getNodes())) {
+                if (n.getType() == 2) {
+                    for (int i : test) {
+                        switch (i) {
+                            case 1:
+                                n.getPos().rotateX(0.05);
+                                break;
+                            case 2:
+                                n.getPos().rotateX(-0.05);
+                                break;
+                            case 3:
+                                n.getPos().rotateY(0.05);
+                                break;
+                            case 4:
+                                n.getPos().rotateY(-0.05);
+                                break;
+                            case 5:
+                                n.getPos().rotateZ(0.05);
+                                break;
+                            case 6:
+                                n.getPos().rotateZ(-0.05);
+                                break;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    Ellipse2D.Double e = new Ellipse2D.Double();
+
     public void drawScene(int w, int h, Graphics2D g2) {
+        g2.translate(gx, gy);
         if (showEdges) {
             for (Node node : graph.getNodes()) {
                 for (Edge edge : node.getAdjacencies()) {
                     g2.setColor(edge.getColor());
+                    g2.setStroke(edge.getStroke());
                     g2.drawLine((int) node.getProjection().getX(), (int) node.getProjection()
                             .getY(), (int) edge.getDestination().getProjection().getX(), (int) edge
                             .getDestination().getProjection().getY());
+//                    g2.drawLine((int) node.getProjection().getX()+2, (int) node.getProjection()
+//                            .getY()+2, (int) edge.getDestination().getProjection().getX()+2, (int) edge
+//                            .getDestination().getProjection().getY()+2);
+//                    int x = (int)((node.getProjection().getX() + edge.getDestination().getProjection().getX())/2);
+//                    int y = (int)((node.getProjection().getY() + edge.getDestination().getProjection().getY())/2);
+//                            
+//                    g2.drawRect(x-10,y-10,gGridSize,gGridSize);
                     if (showEdgeWeights) {
                         g2.drawString("" + edge.getWeight(), (int) (edge.getSource()
                                 .getProjection().getX() + edge.getDestination().getProjection()
@@ -530,27 +777,33 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
         if (showNodes) {
             for (Node node : graph.getNodes()) {
-                if (node == hit) {
-                    node.setColor(Color.green);
-                } else if (node.getAdjacencies().size() <= 1) {
-                    node.setColor(Color.red);
-                } else if (node.getAdjacencies().size() <= 2) {
-                    node.setColor(Color.yellow);
-                } else if (node.getAdjacencies().size() <= 3) {
-                    node.setColor(Color.white);
-                } else if (node.getAdjacencies().size() <= 4) {
-                    node.setColor(Color.cyan);
-                } else if (node.getAdjacencies().size() <= 5) {
-                    node.setColor(Color.blue);
-                } else if (node.getAdjacencies().size() <= 6) {
-                    node.setColor(Color.magenta);
-                } else if (node.getAdjacencies().size() <= 7) {
-                    node.setColor(Color.pink);
-                }
+//                if (node == hit) {
+//                    node.setColor(Color.green);
+//                } else if (node.getAdjacencies().size() <= 1) {
+//                    node.setColor(Color.red);
+//                } else if (node.getAdjacencies().size() <= 2) {
+//                    node.setColor(Color.yellow);
+//                } else if (node.getAdjacencies().size() <= 3) {
+//                    node.setColor(Color.white);
+//                } else if (node.getAdjacencies().size() <= 4) {
+//                    node.setColor(Color.cyan);
+//                } else if (node.getAdjacencies().size() <= 5) {
+//                    node.setColor(Color.blue);
+//                } else if (node.getAdjacencies().size() <= 6) {
+//                    node.setColor(Color.magenta);
+//                } else if (node.getAdjacencies().size() <= 7) {
+//                    node.setColor(Color.pink);
+//                }
                 g2.setColor(node.getColor());
-                g2.fill(new Ellipse2D.Double(node.getProjection().getX() - node.getRadius(), node
+                if (node == hit) {
+                    g2.setColor(Color.magenta);
+                }
+
+                e.setFrame(node.getProjection().getX() - node.getRadius(), node
                         .getProjection().getY()
-                        - node.getRadius(), node.getDiameter(), node.getDiameter()));
+                        - node.getRadius(), node.getDiameter(), node.getDiameter());
+
+                g2.fill(e);
                 if (showNodeWeights) {
                     g2.drawString("" + node.getWeight(), (int) node.getProjection().getX(),
                             (int) node.getProjection().getY());
@@ -563,9 +816,14 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     g2.drawString("" + node.getPos(), (int) node.getProjection().getX(),
                             (int) node.getProjection().getY());
                 }
+                if (node.isFixed()) {
+                    g2.setColor(new Color(0, 0, 250, node.getAlpha()));
+//                    g2.draw(e);
+                }
             }
         }
 
+        g2.translate(-gx, -gy);
         if (showHud) {
             drawTextBlock(
                     g2,
@@ -597,7 +855,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     + "Fix all nodes: f\n" + "Unfix all nodes: u\n" + "Invert node fixations: i\n"
                     + "Decrease edge weights: r\n" + "Enhance edge weights: t\n"
                     + "Toggle system energy statatistcs: E\n"
-                    + "Toggle flat mode: E\n"
+                    + "Toggle flat mode: F\n"
                     + "", 10, 100,
                     new Color(255, 0, 0, 127));
         }
@@ -624,13 +882,15 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
 
     @Override
     public synchronized void paint(Graphics g) {
-        Dimension d = getSize();
-        step();
-        project();
-        Graphics2D g2 = createGraphics2D(d.width, d.height);
-        drawScene(d.width, d.height, g2);
-        g2.dispose();
-        g.drawImage(bimg, 0, 0, this);
+        /*synchronized (graph)*/ {
+            Dimension d = getSize();
+            step();
+            project();
+            Graphics2D g2 = createGraphics2D(d.width, d.height);
+            drawScene(d.width, d.height, g2);
+            g2.dispose();
+            g.drawImage(bimg, 0, 0, this);
+        }
     }
 
     @Override
@@ -709,4 +969,52 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         demo.start();
 
     }
+
+    public void runAlgo(Graph graph, Node node) {
+        if (!node.isFixed()) {
+            node.setFixed(true);
+            node.setColor(Color.orange);
+        } else {
+            node.setColor(Color.yellow);
+        }
+
+        Edge min = null;
+        for (Edge e : node.getAdjacencies()) {
+            if (min == null || e.getLength() < min.getLength()) {
+                if (!e.getSource().isFixed() || !e.getDestination().isFixed()) {
+                    min = e;
+                }
+            }
+        }
+
+        if (min != null) {
+            Node n = min.getSource();
+            if (n == node) {
+                n = min.getDestination();
+            }
+            int[] p = getClosestLatticeNode((int) n.getPos().getX(), (int) n.getPos().getY(), (int) n.getPos().getZ(), gGridSize);
+            n.setPos(new Vector(p[0], p[1], p[2]));
+            n.setFixed(true);
+            n.setColor(Color.pink);
+            //non-static
+            WWW = n;
+        } else {
+            WWW = graph.getRandomNode();
+        }
+    }
+
+    public static int[] getClosestLatticeNode(int x, int y, int z, int d) {
+        x = x/d * d;
+        y = y/d * d;
+        z = z/d * d;
+        System.out.println(x + " " + y + " " + z);
+        return new int[]{x, y, z};
+    }
+
+    public interface GuideGenerator {
+
+        public boolean contains(int x, int y, int z);
+
+    }
+
 }

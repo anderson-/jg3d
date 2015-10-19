@@ -15,6 +15,7 @@ public class Node {
     private String name;
     private Color color;
     private List<Edge> adjacencies;
+    private int type = 0;
 
     private static int instanceCounter = 0;
 
@@ -54,7 +55,7 @@ public class Node {
     public double getDiameter() {
         return diameter;
     }
-    
+
     public void setDiameter(double diameter) {
         this.diameter = diameter;
     }
@@ -69,32 +70,44 @@ public class Node {
 
     public Node() {
         instanceCounter++;
-        init(new Vector(0, 0, 0), Integer.toString(instanceCounter), Color.red);
+        init(new Vector(0, 0, 0), Integer.toString(instanceCounter), Color.cyan);
     }
 
     public Node(Vector p) {
         instanceCounter++;
-        init(p, Integer.toString(instanceCounter), Color.RED);
+        init(p, Integer.toString(instanceCounter), Color.cyan);
     }
 
     public Node(Vector p, String name) {
         instanceCounter++;
-        init(p, name, Color.RED);
+        init(p, name, Color.cyan);
     }
 
     public void setColor(Color c) {
         this.color = c;
     }
 
-    public Color getColor() {
-        int p = (int) (127 - position.getZ());
-        if (p < 5) {
-            p = 5;
-        } else if (p > 250) {
-            p = 250;
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public int getAlpha() {
+        int alpha = (int) (127 - position.getZ());
+        if (alpha < 5) {
+            alpha = 5;
+        } else if (alpha > 250) {
+            alpha = 250;
         }
-        Color c = new Color(color.getRed(), color.getGreen(), color.getBlue(), p);
-        return c;
+        alpha = (position.getZ() < -100) ? 0 : alpha;
+        return alpha;
+    }
+
+    public Color getColor() {
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), getAlpha());
     }
 
     public void setName(String n) {
