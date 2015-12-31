@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Importer {
+
     /*
      * File format is like this:
      *   nodenameA;nodenameB
@@ -26,23 +27,36 @@ public class Importer {
         try {
             String str;
             while ((str = in.readLine()) != null) {
+                if (str.startsWith("END")) {
+                    break;
+                }
                 String[] tmp = str.split(";");
-                Node n = g.getNode(tmp[0].trim());
-                if (n == null) {
-                    n = new Node(new Vector(100));
-                    n.setName(tmp[0].trim());
-                    g.addNode(n);
-                }
-                Node m = g.getNode(tmp[1].trim());
-                if (m == null) {
-                    m = new Node(new Vector(100));
-                    m.setName(tmp[1].trim());
-                    g.addNode(m);
-                }
-                g.connect(n, m, 10);
-                if (tmp.length > 2) {
-                    Edge e = n.getEdgeTo(m);
-                    e.setLabel(tmp[2].trim());
+                if (!str.startsWith(".")) {
+                    Node n = g.getNode(tmp[0].trim());
+                    if (n == null) {
+                        n = new Node(new Vector(100));
+                        n.setName(tmp[0].trim());
+                        g.addNode(n);
+                    }
+                    Node m = g.getNode(tmp[1].trim());
+                    if (m == null) {
+                        m = new Node(new Vector(100));
+                        m.setName(tmp[1].trim());
+                        g.addNode(m);
+                    }
+                    g.connect(n, m, 10);
+                    if (tmp.length > 2) {
+                        Edge e = n.getEdgeTo(m);
+                        e.setLabel(tmp[2].trim());
+                        if (tmp.length > 3) {
+
+                        }
+                    }
+                } else {
+                    Node n = g.getNode(tmp[0].substring(1).trim());
+                    n.setType(tmp[1].trim().startsWith("TransistorElm") ? 2 : 1);
+                    n.setLabel(tmp[1].trim());
+//                    n.setPos(new Vector(Double.parseDouble(tmp[1].trim()), Double.parseDouble(tmp[2].trim()), Double.parseDouble(tmp[3].trim())));
                 }
             }
             in.close();
@@ -54,7 +68,7 @@ public class Importer {
     public static void importContent(Graph g, String content) {
         importContent(g, new BufferedReader(new StringReader(content)));
     }
-    
+
     public static void importfile(Graph g, String filename) {
         try {
             importContent(g, new BufferedReader(new FileReader(filename)));

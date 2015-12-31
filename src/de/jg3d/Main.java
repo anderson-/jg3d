@@ -25,6 +25,12 @@ import java.awt.BasicStroke;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 public class Main extends JApplet implements Runnable, MouseInputListener, KeyListener, MouseWheelListener {
 
@@ -56,7 +62,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private boolean showEdgeLength = false;
     private boolean flatMode = false;
     private double pseudoZoom = 6;
-
+    int px, py, pz;
     int gx, gy;
 
     ArrayList<Integer> test = new ArrayList<>();
@@ -64,6 +70,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     private int threads = 1;
     private ForceWorker[] forceWorkers = new ForceWorker[4];
     private Node WWW;
+    private GuideGenerator lastGuideGen = null;
 
     public Graph getGraph() {
         return graph;
@@ -84,21 +91,36 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 }
                 break;
             case KeyEvent.VK_UP:
-                gy -= 10;
+                if (ctrlIsDown) {
+                    py -= 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    gy -= 10;
+                }
                 for (Node n : graph.getNodes()) {
 //                    n.getPos().setY(n.getPos().getY() + -10);
 //                    n.setSelfForceY(-.2);
                 }
                 break;
             case KeyEvent.VK_DOWN:
-                gy += 10;
+                if (ctrlIsDown) {
+                    py += 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    gy += 10;
+                }
                 for (Node n : graph.getNodes()) {
 //                    n.getPos().setY(n.getPos().getY() + 10);
 //                    n.setSelfForceY(.2);
                 }
                 break;
             case KeyEvent.VK_RIGHT:
-                gx += 10;
+                if (ctrlIsDown) {
+                    px += 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    gx += 10;
+                }
                 for (Node n : graph.getNodes()) {
 
 //                    n.getPos().setX(n.getPos().getX() + 10);
@@ -106,22 +128,37 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                gx -= 10;
+                if (ctrlIsDown) {
+                    px -= 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    gx -= 10;
+                }
                 for (Node n : graph.getNodes()) {
 //                    n.getPos().setX(n.getPos().getX() + -10);
 //                    n.setSelfForceX(-.2);
                 }
                 break;
             case KeyEvent.VK_PAGE_UP:
-                for (Node n : graph.getNodes()) {
-                    n.getPos().setZ(n.getPos().getZ() + 10);
+                if (ctrlIsDown) {
+                    pz += 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    for (Node n : graph.getNodes()) {
+                        n.getPos().setZ(n.getPos().getZ() + 10);
 //                    n.setSelfForceZ(.2);
+                    }
                 }
                 break;
             case KeyEvent.VK_PAGE_DOWN:
-                for (Node n : graph.getNodes()) {
-                    n.getPos().setZ(n.getPos().getZ() + -10);
+                if (ctrlIsDown) {
+                    pz -= 1;
+                    generateGuide(lastGuideGen, 5, gGridSize);
+                } else {
+                    for (Node n : graph.getNodes()) {
+                        n.getPos().setZ(n.getPos().getZ() + -10);
 //                    n.setSelfForceZ(-.2);
+                    }
                 }
                 break;
             case KeyEvent.VK_HOME:
@@ -146,6 +183,44 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 break;
             case '4':
                 threads = 4;
+                break;
+            case '6':
+                WWW = hit;
+                if (WWW == null) {
+                    WWW = graph.getNode("7");
+                    WWW.setColor(Color.red);
+                }
+                for (Edge ed : graph.getEdges()) {
+                    ed.setWeight(10);
+                }
+
+                for (Node n : graph.getNodes()) {
+                    if (n.connectedTo(WWW)) {
+                        n.setColor(Color.yellow);
+                        n.setWeight(80);
+                        Edge e1 = n.getEdgeTo(WWW);
+                        Edge e2 = WWW.getEdgeTo(n);
+                        e1.setWeight(100);
+                        e2.setWeight(100);
+                    } else {
+                        n.setColor(Color.yellow);
+                        n.setWeight(10);
+                    }
+                }
+
+                int[] gp = getClosestLatticeNode(WWW, gGridSize, 1);
+                px = gp[0];
+                py = gp[1];
+                pz = gp[2];
+                WWW.setPos(new Vector(px, py, pz).multiply(gGridSize));
+                WWW.setFixed(true);
+                generateGuide(new GuideGenerator() {
+                    @Override
+                    public boolean contains(int x, int y, int z) {
+                        double dist = Math.sqrt(x * x + y * y + z * z);
+                        return dist != 0 && dist < 2;
+                    }
+                }, 5, gGridSize);
                 break;
             case '7':
                 generateGuide(new GuideGenerator() {
@@ -293,6 +368,53 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 }
                 test.add(6);
                 break;
+            case '`':
+                //Node.G += .5;
+//                for (Node n : graph.getNodes()) {
+//                    System.out.println("." + n.getName() + ";" + n.getPos().getX() + ";" + n.getPos().getY() + ";" + n.getPos().getZ());
+//                }
+                HashSet<Edge> hs = new HashSet<>();
+                for (Edge ed : graph.getEdges()) {
+                    hs.add(ed);
+                }
+                double sizeInMM = 72;
+                double max = Double.MIN_VALUE;
+                double min = Double.MAX_VALUE;
+
+                for (Edge ed : hs) {
+                    double l = ed.getLength();
+                    if (l > max) {
+                        max = l;
+                    }
+                    if (l < min) {
+                        min = l;
+                    }
+                    System.out.printf("%s %.1f\n", ed, l);
+                }
+                System.out.printf("min %.1f, max %.1f\n", min, max);
+
+                HashMap<Integer, Integer> hm = new HashMap<>();
+                for (Edge ed : hs) {
+                    double l = ed.getLength();
+                    l = (sizeInMM * l) / max;
+                    int rl = (int) (l * 10);
+
+                    rl += (rl % 10 >= 5) ? 10 : 0;
+                    rl /= 10;
+
+                    if (hm.containsKey(rl)) {
+                        hm.put(rl, hm.get(rl) + 1);
+                    } else {
+                        hm.put(rl, 1);
+                    }
+
+                    System.out.printf("%.1f = %d\n", l, rl);
+                }
+
+                for (HashMap.Entry<Integer, Integer> es : hm.entrySet()) {
+                    System.out.printf("%d : %d\n", es.getKey(), es.getValue());
+                }
+                break;
             case '#':
                 for (int i = test.size() - 1; i >= 0; i--) {
                     switch (test.get(i)) {
@@ -331,10 +453,21 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 test.clear();
                 break;
             case '\\':
-                if (WWW == null) {
-                    WWW = graph.getNode(23);
-                }
-                runAlgo(graph, WWW);
+                new Thread() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException ex) {
+                            }
+                            if (WWW == null) {
+                                WWW = graph.getNode(23);
+                            }
+                            runAlgo(graph, WWW);
+                        }
+                    }
+                }.start();
                 break;
         }
     }
@@ -371,16 +504,16 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     @Override
     public void mouseMoved(MouseEvent e) {
         if (ctrlIsDown) {
-            if (hit != null) {
-                Node tmp = new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0));
-                if (hit.getPos().distance(tmp.getPos()) > 20) {//gridSize??
-                    graph.addNode(tmp);
-                    graph.connect(hit, tmp, 10);
-                    hit = tmp;
-                }
-            } else {
-                hit = graph.hit(e.getPoint());
-            }
+//            if (hit != null) {
+//                Node tmp = new Node(new Vector((e.getX() - 400) / pseudoZoom, (e.getY() - 300) / pseudoZoom, 0));
+//                if (hit.getPos().distance(tmp.getPos()) > 20) {//gridSize??
+////                    graph.addNode(tmp);
+////                    graph.connect(hit, tmp, 10);
+//                    hit = tmp;
+//                }
+//            } else {
+            hit = graph.hit(e.getPoint());
+//            }
         }
     }
 
@@ -455,9 +588,13 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     @Override
     public void mouseWheelMoved(MouseWheelEvent we) {
         double wr = we.getWheelRotation() * .5;
-        pseudoZoom = (pseudoZoom + wr > 0.2) ? pseudoZoom + wr : pseudoZoom;
-        for (Node n : graph.getNodes()) {
-            n.setDiameter(8 * pseudoZoom / 2);
+        if (pseudoZoom + wr > 0.2) {
+            //centralizar o no mais proximo do mouse
+            gx += gx * (wr * 1);
+            gy += gy * (wr * 1);
+
+            pseudoZoom += wr;
+            throw new RuntimeException("implementa isso aqui!");
         }
     }
 
@@ -500,6 +637,18 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 b.get(i).get(j).getPos().setPos(a.get(i).get(j).getPos().getX(),
                         a.get(i).get(j).getPos().getY() + 10, a.get(i).get(j).getPos().getZ());
                 g.connect(a.get(i).get(j), b.get(i).get(j), ew);
+            }
+        }
+    }
+
+    public static void createGraphK(Graph g, int k) {
+        for (int i = 0; i < k; i++) {
+            Node n = new Node(new Vector(100.0));
+            g.addNode(n);
+            for (Node o : g.getNodes()) {
+                if (n != o) {
+                    g.connect(n, o, 10);
+                }
             }
         }
     }
@@ -682,6 +831,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     }
 
     public void generateGuide(GuideGenerator guideGen, int size, int d) {
+        lastGuideGen = guideGen;
         /*synchronized (graph)*/ {
             for (Node n : new ArrayList<Node>(graph.getNodes())) {
                 if (n.getType() == 2) {
@@ -692,7 +842,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                 for (int y = -size; y <= size; y++) {
                     for (int z = -size; z <= size; z++) {
                         if (guideGen.contains(x, y, z)) {
-                            Node node = new Node(new Vector(x * d, y * d, z * d));
+                            Node node = new Node(new Vector((x + px) * d, (y + py) * d, (z + pz) * d));
                             node.setType(2);
                             node.setColor(Color.red);
                             graph.addNode(node);
@@ -799,9 +949,12 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
                     g2.setColor(Color.magenta);
                 }
 
-                e.setFrame(node.getProjection().getX() - node.getRadius(), node
-                        .getProjection().getY()
-                        - node.getRadius(), node.getDiameter(), node.getDiameter());
+                double zoom = pseudoZoom / 5;
+                e.setFrame(node.getProjection().getX() - node.getRadius() * zoom,
+                        node.getProjection().getY() - node.getRadius() * zoom,
+                        node.getDiameter() * zoom,
+                        node.getDiameter() * zoom
+                );
 
                 g2.fill(e);
                 if (showNodeWeights) {
@@ -933,12 +1086,18 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
     }
 
     public static void main(String argv[]) {
+        createAndRun(argv);
+    }
+
+    public static Graph createAndRun(String argv[]) {
+
         final Main demo = new Main();
         demo.init();
         if (argv.length > 0) { //if we got a file, let's try to load it
             Importer.importfile(demo.graph, argv[0]);
         } else { //or show a simple node-grid
-            nodeGrid(demo.graph, 15, 14, 13, true, true);
+            //nodeGrid(demo.graph, 15, 14, 13, true, true);
+            createGraphK(demo.graph, 30);
         }
         Frame f = new Frame("jG3D (press ? for help)");
         f.addWindowListener(new WindowAdapter() {
@@ -968,9 +1127,86 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         f.setVisible(true);
         demo.start();
 
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                }
+                long t = System.currentTimeMillis();
+                while (demo.graph.getKE() > 10) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                    }
+//                    System.out.println(".");
+                }
+                t = System.currentTimeMillis() - t;
+                System.out.println("Equi:" + t / 1000.0);
+            }
+        }.start();
+        return demo.graph;
+    }
+    boolean x = false;
+
+    public void addMN(Graph graph, Node n1, Node n2) {
+        graph.disconnect(n1, n2);
+
+        Node tmp = new Node(n1.getPos().midpoint(n2.getPos()));
+        tmp.setColor(Color.red);
+        graph.addNode(tmp);
+        graph.connect(n1, tmp, 100);
+        graph.connect(n2, tmp, 100);
     }
 
     public void runAlgo(Graph graph, Node node) {
+//
+//        if (x) {
+//            return;
+//        }
+//        x = true;
+//        ArrayList<Node[]> c = new ArrayList<>();
+//        ArrayList<Edge> edges = new ArrayList<>(graph.getEdges());
+//        for (Edge e1 : edges) {
+//            next:
+//            for (Edge e2 : edges) {
+//                if (e1 != e2
+//                        && e1.getDestination() == e2.getSource()
+//                        && e1.getSource() == e2.getDestination()) {
+//                    Node n1 = e1.getSource();
+//                    Node n2 = e1.getDestination();
+//                    for (Node[] ns : c) {
+//                        if ((ns[0] == n1 && ns[1] == n2) || (ns[0] == n2 && ns[1] == n1)) {
+//                            continue next;
+//                        }
+//                    }
+//
+//                    c.add(new Node[]{n1, n2});
+//
+//                    addMN(graph, n1, n2);
+//
+//                }
+//            }
+//        }
+
+////        Edge min = null;
+////        double x = 0;
+////
+////        for (Edge e : graph.getEdges()) {
+////            Node n1 = e.getSource();
+////            Node n2 = e.getDestination();
+////            double k = n1.repulsiveForce(n2).absoluteValue() / n1.getPos().distance(n2.getPos());
+////            if (n1.isFixed() && n2.isFixed()) {
+////                k = Double.MAX_VALUE;
+////            }
+////            if (min == null || k < x) {
+////                min = e;
+////                x = k;
+////            }
+////        }
+////        if (x == Double.MAX_VALUE){
+////            return;
+////        }
         if (!node.isFixed()) {
             node.setFixed(true);
             node.setColor(Color.orange);
@@ -992,7 +1228,7 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
             if (n == node) {
                 n = min.getDestination();
             }
-            int[] p = getClosestLatticeNode((int) n.getPos().getX(), (int) n.getPos().getY(), (int) n.getPos().getZ(), gGridSize);
+            int[] p = getClosestLatticeNode((int) n.getPos().getX(), (int) n.getPos().getY(), (int) n.getPos().getZ(), gGridSize, 10);
             n.setPos(new Vector(p[0], p[1], p[2]));
             n.setFixed(true);
             n.setColor(Color.pink);
@@ -1003,11 +1239,17 @@ public class Main extends JApplet implements Runnable, MouseInputListener, KeyLi
         }
     }
 
-    public static int[] getClosestLatticeNode(int x, int y, int z, int d) {
-        x = x/d * d;
-        y = y/d * d;
-        z = z/d * d;
-        System.out.println(x + " " + y + " " + z);
+    public static int[] getClosestLatticeNode(Node node, int d, int a) {
+        int x = (int) node.getPos().getX();
+        int y = (int) node.getPos().getY();
+        int z = (int) node.getPos().getZ();
+        return getClosestLatticeNode(x, y, z, d, a);
+    }
+
+    public static int[] getClosestLatticeNode(int x, int y, int z, int d, int a) {
+        x = (x / d) * a + (Math.abs(x) % d > d / 2 ? a * Math.abs(x) / x : 0);
+        y = (y / d) * a + (Math.abs(y) % d > d / 2 ? a * Math.abs(y) / y : 0);
+        z = (z / d) * a + (Math.abs(z) % d > d / 2 ? a * Math.abs(z) / z : 0);
         return new int[]{x, y, z};
     }
 

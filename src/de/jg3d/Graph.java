@@ -77,11 +77,22 @@ public class Graph {
         return pe;
     }
 
+    public Edge directConnect(Node a, Node b, double weight) {
+        Edge e = a.getEdgeTo(b);
+        if (e == null) {
+            e = b.getEdgeTo(a);
+            if (e == null) {
+                return connectTo(a, b, weight);
+            }
+        }
+        return e;
+    }
+
     public Edge connectTo(Node a, Node b, double weight) {
         if (a.connectedTo(b)) {
             Edge e = a.getEdgeTo(b);
-            System.out.println("ERROR : " + a + " already connected to " + b + " with weight "
-                    + e.getWeight());
+//            System.out.println("ERROR : " + a + " already connected to " + b + " with weight "
+//                    + e.getWeight());
             return e;
         } else {
             Edge e = null;

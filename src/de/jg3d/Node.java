@@ -1,6 +1,8 @@
 package de.jg3d;
 
+import static de.jg3d.Main.getClosestLatticeNode;
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,6 +15,7 @@ public class Node {
     private double diameter = 20; // todo
 
     private String name;
+    private String label;
     private Color color;
     private List<Edge> adjacencies;
     private int type = 0;
@@ -65,6 +68,9 @@ public class Node {
     }
 
     public double getKE() {
+        if (fixed){
+            return 0;
+        }
         return velocity.absoluteValue() * weight;
     }
 
@@ -93,6 +99,14 @@ public class Node {
 
     public int getType() {
         return type;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public int getAlpha() {
@@ -175,8 +189,37 @@ public class Node {
 //            System.out.println("repulsive uberforce: " + force.absoluteValue());
             force = force.multiply(maxRepulsion / force.absoluteValue());
         }
+
+//        Vector forceK = position.add(node.getPos().invert()); // force = a - b
+//        forceK = forceK.multiply(1 / Math.pow(forceK.absoluteValue(), 3)); // normalize
+//        forceK = forceK.multiply((50 - position.add(node.getPos().invert()).absoluteValue()) * k);
+//        force.add(forceK);
+//        
+//        int[] closestLatticeNode = getClosestLatticeNode(this, 50, 50);
+//        int[] closestLatticeNode2 = getClosestLatticeNode(node, 50, 50);
+//
+//        if (Arrays.equals(closestLatticeNode, closestLatticeNode2)) {
+//            Vector grid = new Vector(closestLatticeNode);
+//
+//            Vector n1 = grid.add(position.invert());
+//            Vector n2 = grid.add(node.getPos().invert());
+//
+//            if (n1.absoluteValue() > n2.absoluteValue()) {
+//                double d = n1.absoluteValue();
+//                n1 = n1.multiply(1 / Math.pow(n1.absoluteValue(), 0.5)); // normalize
+//                if (d > 0) {
+//                    d = 1 / d;
+//                } else {
+//                    d = 100;
+//                }
+//                force.add(n1.multiply(G * d * 1000));
+//            }
+//        }
+
         return force;
     }
+    double k = 2;
+    public static double G = 0;
 
     // sum of attractive forces to all adjacencies
     public Vector attractiveForce() {
@@ -184,13 +227,28 @@ public class Node {
         Vector attraction;
         for (Edge edge : adjacencies) {
             attraction = position.add(edge.getDestination().getPos().invert()); // force
-            // =
-            // a
-            // -
-            // b
+//            // =
+//            // a
+//            // -
+//            // b
             attraction = attraction.multiply(1 / Math.pow(attraction.absoluteValue(), 0.5)); // normalize
             force = force.add(attraction.multiply(edge.getWeight()));
+
+//            force = force.add(attraction.multiply(-(50 - position.add(edge.getDestination().getPos().invert()).absoluteValue()) * k));
         }
+
+//        int[] closestLatticeNode = getClosestLatticeNode(this, 50, 50);
+//
+//        Vector attractionGrid = new Vector(closestLatticeNode).add(position.invert());
+//        double d = attractionGrid.absoluteValue();
+//        attractionGrid = attractionGrid.multiply(1 / Math.pow(attractionGrid.absoluteValue(), 0.5)); // normalize
+//        if (d > 0) {
+//            d = 1 / d;
+//        } else {
+//            d = 100;
+//        }
+//
+//        force = force.add(attractionGrid.multiply(-G * d));
 
         // if (force.absoluteValue() > maxAttraction) { // reduce
         // extraterrestrial uberforces

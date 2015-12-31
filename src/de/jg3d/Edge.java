@@ -3,6 +3,7 @@ package de.jg3d;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Stroke;
+import java.util.Objects;
 
 public class Edge {
 
@@ -78,12 +79,32 @@ public class Edge {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), getAlpha());
     }
 
+    public Node getOther(Node n) {
+        return (n == source) ? destination : source;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(source.getName()).append("]--(").append(weight).append(")-->[")
                 .append(destination.getName()).append(']');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Edge) {
+            Edge edge = (Edge) obj;
+            return ((this.source == edge.source && this.destination == edge.destination) || (this.source == edge.destination && this.destination == edge.source));
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 43 * hash + Objects.hashCode(this.destination) + Objects.hashCode(this.source);
+        return hash;
     }
 
 }

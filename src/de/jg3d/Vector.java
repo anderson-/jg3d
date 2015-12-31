@@ -14,6 +14,12 @@ public class Vector {
         this.z = p.getZ();
     }
 
+    public Vector(int[] p) {
+        this.x = p[0];
+        this.y = p[1];
+        this.z = p[2];
+    }
+
     public Vector(double x, double y, double z) {
         this.x = x;
         this.y = y;
@@ -143,4 +149,35 @@ public class Vector {
         x = tmpx;
     }
 
+    public Vector normalize() {
+        return multiply(1 / Math.pow(absoluteValue(), 0.5));
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Vector other = (Vector) obj;
+        if (Double.doubleToLongBits(this.x) != Double.doubleToLongBits(other.x)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(this.z) != Double.doubleToLongBits(other.z)) {
+            return false;
+        }
+        return true;
+    }    
+    
 }
